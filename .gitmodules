@@ -1,0 +1,4 @@
+[submodule "putato"]
+	path = putato
+	url = https://github.com/VolatileDream/putato.git
+	branch = main
