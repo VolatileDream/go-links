@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+prg=`dirname "$0"`
+cd "$prg"
+virtualenv -p python3 .venv
+source ".venv/bin/activate"
+
+pip install -r requirements.txt -r putato/requirements.txt
