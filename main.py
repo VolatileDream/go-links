@@ -36,11 +36,16 @@ def counts():
 # of having this built into the `go` server.
 @app.before_request
 def maybe_rewrite_for_goto_domain():
+  url_delims = [':', '.']
+  base = app.config['HOST_BASE']
+  quick = app.config['HOST_QUICK']
+
   host = request.host
   force_goto = request.args.get('force_goto')
-  if host.startswith('goto.') or host.startswith("goto:") or host == "goto" or force_goto:
+  if force_goto or host == quick or \
+      (host.startswith(quick) and len(host) > len(quick) and host[len(quick)] in url_delims):
     # Redirect to go, assuming it resolves to where this request landed.
-    return request.url_root.replace("goto", "go", 1) + "to" + request.full_path
+    return redirect(request.url_root.replace(quick, base, 1) + "to" + request.full_path)
 
 @app.route('/')
 def index():

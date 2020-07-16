@@ -1,3 +1,4 @@
-REDIRECT = {
-  "home": "http://home.cubecube.xyz",
-}
+DB_FILE = "db.sqlite"
+
+HOST_BASE = "go"
+HOST_QUICK = "goto"
