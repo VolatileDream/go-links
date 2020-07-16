@@ -1,24 +1,35 @@
-from flask import Flask, abort, current_app, escape, render_template, request, redirect, url_for
-from putato.putato import Storage, Transaction, Table
+import requests, json
+from flask import Flask, abort, render_template, request, redirect
+from putato.putato import Storage
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
 storage = Storage(app.config['DB_FILE'])
-table = storage.table('r')
 
-import requests, json
+from functools import wraps
+# "Magic" to create tables from empty functions
+# eg:
+#    @get_table
+#    def table_name():
+#      pass
+def get_table(func):
+  @wraps(func)
+  def table():
+    name = "table_" + func.__name__
+    t = getattr(request, "table_" + name, None)
+    if t is None:
+      t = storage.table(func.__name__)
+      setattr(request, name, t)
+    return t
+  return table
 
-def use_config():
-  return current_app.config.get('STORAGE') == "config"
+@get_table
+def redirects():
+  pass
 
-def lookup_redirect(short):
-  return table.get(short)
-
-def list_redirects():
-  # needs to output [{ id: "...", target: "..."}, ...]
-  def convert(items):
-    return { "id": items[0], "target": items[1] }
-  return [convert(i) for i in table.list()]
+@get_table
+def counts():
+  pass
 
 # Really this should be a separate server that
 # responds to all `goto` domain requests instead
@@ -50,7 +61,7 @@ def create_or_edit_link():
   if not name:
     return redirect('create_link')
 
-  current = table.get(name)
+  current = redirects().get(name)
   if current is None:
     current = ""
 
@@ -62,7 +73,7 @@ def create_or_edit_link():
     return render_template('edit.html', name=name, dest=current, error="exists", mode="edit")
 
   with storage.transaction():
-    table.put(name, dest)
+    redirects().put(name, dest)
 
   return render_template('edit.html', name=name, dest=dest, success=True, mode="edit")
 
@@ -73,29 +84,27 @@ def delete():
   if not name:
     return redirect('/list')
  
-  current = table.get(name)
+  current = redirects().get(name)
   if current is None:
     current = ""
 
   with storage.transaction():
-    table.remove(name)
+    redirects().remove(name)
 
   return render_template('delete.html', name=name, dest=current)
 
 @app.route('/list')
 def list_links():
-  return render_template("listing.html", listing=list_redirects())
-  return json.dumps(list_redirects())
-
-# Debugging endpoint.
-@app.route('/echo/<path:args>')
-def echo(args):
-  return "echo: " + args
+  links = [{"id": i[0], "target": i[1]} for i in redirects().list()]
+  return render_template("listing.html", listing=links)
 
 @app.route('/to/<path:wildcard>')
 def redirector(wildcard):
-  redir = lookup_redirect(wildcard)
+  redir = redirects().get(wildcard)
   if redir:
+    with storage.transaction():
+      val = counts().get(wildcard) or 0
+      counts().put(wildcard, val + 1)
     return redirect(redir)
   abort(404)
 
