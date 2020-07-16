@@ -2,14 +2,9 @@
 {% block title %}New Link{% endblock %}
 {% block body %}
   <form action="/edit" method=post>
-  {% if error %}
-    <p class=error><strong>Error:</strong> {{ error }}</p>
-  {% elif success %}
-    <p class=error><strong>Success!</strong></p>
-    <p><a href="/to/{{ name }}">go/to/{{ name }}</a> now directs to {{ dest }}</p>
-  {% endif %}
-    <p>Name:    <input type=text name=name value="{{ name }}"/></p>
-    <p>Location: <input type=text name=dest value="{{ dest }}"</p>
+    <p>Name:    <input type=text name=name value="{{ name }}" /></p>
+    <p>Location: <input type=text name=dest value="{{ dest }}" /></p>
+    <input type=submit value="Create" />
   </form>
 {% endblock %}
 

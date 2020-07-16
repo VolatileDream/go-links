@@ -2,20 +2,19 @@
 {% block title %}New Link{% endblock %}
 {% block body %}
   <form action="/edit" method=post>
+  {# Handle responses from the endpoint #}
   {% if error %}
     <p class=error><strong>Error:</strong> {{ error }}</p>
   {% elif success %}
     <p class=error><strong>Success!</strong></p>
     <p><a href="/to/{{ name }}">go/to/{{ name }}</a> now directs to {{ dest }}</p>
   {% endif %}
-    <p>Name:    <input type=text name=name value="{{ name }}"/></p>
+    <p>Name: <strong>{{ name }}</strong></p>
+    <input type=hidden name=name value="{{ name }}"/>
     <p>Location: <input type=text name=dest value="{{ dest }}"</p>
-  {% if mode_edit %}
-    <input type=hidden name=edit value=True />
+    {# Tells the server that we intended to edit, and not create. #}
+    <input type=hidden name=mode value=edit />
     <p><input type=submit value="Update" /></p>
-  {% else %}
-    <p><input type=submit value="Create" /></p>
-  {% endif %}
   </form>
   <form action="/delete" method=post>
   <input type=hidden name=name value="{{ name }}"/>

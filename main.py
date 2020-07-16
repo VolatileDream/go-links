@@ -33,17 +33,19 @@ def maybe_rewrite_for_goto_domain():
 
 @app.route('/')
 def index():
-  return redirect(url_for('list_links'))
+  return redirect('/list')
 
 @app.route('/new')
 def create_link():
-  return render_template('edit.html')
+  return render_template('new.html')
 
 @app.route('/edit', methods=['GET', 'POST'])
 def create_or_edit_link():
   name = request.values.get('name', None)
   dest = request.values.get('dest', "")
-  mode_edit = request.values.get('edit', False)
+  # both edit & new post to this spot.
+  # They need to be differentiated.
+  mode = request.values.get('mode', "create")
 
   if not name:
     return redirect('create_link')
@@ -53,16 +55,16 @@ def create_or_edit_link():
     current = ""
 
   if request.method == 'GET':
-    return render_template('edit.html', name=name, dest=current, success=False, error=False, mode_edit=True)
+    return render_template('edit.html', name=name, dest=current, mode="edit")
 
-  if not mode_edit and current:
+  if mode == "create" and current:
     # Attempted a create that already existed.
-    return render_template('edit.html', name=name, dest=dest, success=False, error="exists", mode_edit=mode_edit)
+    return render_template('edit.html', name=name, dest=current, error="exists", mode="edit")
 
   with storage.transaction():
     table.put(name, dest)
 
-  return render_template('edit.html', name=name, dest=dest, success=True, mode_edit=True)
+  return render_template('edit.html', name=name, dest=dest, success=True, mode="edit")
 
 @app.route('/delete', methods=['POST'])
 def delete():
