@@ -1,35 +1,74 @@
-from flask import Flask, abort, escape, request, redirect, url_for
+from flask import Flask, abort, current_app, escape, render_template, request, redirect, url_for
+from putato.putato import Storage, Transaction, Table
+
 app = Flask(__name__)
+app.config.from_pyfile("config.py")
+storage = Storage(app.config['DB_FILE'])
+table = storage.table('r')
 
-import requests, json, config
+import requests, json
 
-def can_goto_redirect(request):
-  host = request.host
-  force_goto = request.args.get('force_goto')
-  return host.startswith('goto.') or host.startswith("goto:") or host == "goto" or force_goto
+def use_config():
+  return current_app.config.get('STORAGE') == "config"
 
-def redirect_to_go_domain(request):
-  return request.url_root.replace("goto", "go", 1) + "to" + request.full_path
-  
 def lookup_redirect(short):
-  return url_for('echo', args=short)
+  return table.get(short)
+
+def list_redirects():
+  # needs to output [{ id: "...", target: "..."}, ...]
+  def convert(items):
+    return { "id": items[0], "target": items[1] }
+  return [convert(i) for i in table.list()]
 
 # Really this should be a separate server that
 # responds to all `goto` domain requests instead
 # of having this built into the `go` server.
 @app.before_request
 def maybe_rewrite_for_goto_domain():
-  if can_goto_redirect(request):
+  host = request.host
+  force_goto = request.args.get('force_goto')
+  if host.startswith('goto.') or host.startswith("goto:") or host == "goto" or force_goto:
     # Redirect to go, assuming it resolves to where this request landed.
-    return redirect(redirect_to_go_domain(request))
+    return request.url_root.replace("goto", "go", 1) + "to" + request.full_path
 
 @app.route('/')
 def index():
-  return redirect(url_for('list'))
+  return redirect(url_for('list_links'))
+
+@app.route('/new')
+def create_link():
+  return render_template('new.html')
+
+@app.route('/edit', methods=['GET', 'POST'])
+def create_or_edit_link():
+  name = request.values.get('name', None)
+  dest = request.values.get('dest', "")
+  mode_edit = request.values.get('edit', False)
+
+  if not name:
+    return redirect('create_link')
+
+  current = table.get(name)
+
+  if current is None:
+    current = ""
+
+  if request.method == 'GET':
+    return render_template('new.html', name=name, dest=current, success=False, error=False, mode_edit=True)
+
+  if not mode_edit and current:
+    # Attempted a create that already existed.
+    return render_template('new.html', name=name, dest=dest, success=False, error="exists", mode_edit=mode_edit)
+
+  with storage.transaction():
+    table.put(name, dest)
+
+  return render_template('new.html', name=name, dest=dest, success=True, mode_edit=True)
 
 @app.route('/list')
-def list():
-  return json.dumps(config.REDIRECT)
+def list_links():
+  return render_template("listing.html", listing=list_redirects())
+  return json.dumps(list_redirects())
 
 # Debugging endpoint.
 @app.route('/echo/<path:args>')
@@ -38,7 +77,7 @@ def echo(args):
 
 @app.route('/to/<path:wildcard>')
 def redirector(wildcard):
-  redir = config.REDIRECT.get(wildcard)
+  redir = lookup_redirect(wildcard)
   if redir:
     return redirect(redir)
   abort(404)

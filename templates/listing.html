@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Links{% endblock %}
+{% block body %}
+<h2>Links</h2>
+{% for item in listing %}
+  <p><a href="/to/{{ item.id }}">{{ item.id }}</a>(<a href=/edit?name={{ item.id }}>edit</a>): {{ item.target }}</p>
+{% endfor %}
+  <a href=/new>
+    <input type=button value="Create a Link"/>
+  </a>
+{% endblock %}
+
