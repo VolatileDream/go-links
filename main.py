@@ -37,7 +37,7 @@ def index():
 
 @app.route('/new')
 def create_link():
-  return render_template('new.html')
+  return render_template('edit.html')
 
 @app.route('/edit', methods=['GET', 'POST'])
 def create_or_edit_link():
@@ -49,21 +49,36 @@ def create_or_edit_link():
     return redirect('create_link')
 
   current = table.get(name)
-
   if current is None:
     current = ""
 
   if request.method == 'GET':
-    return render_template('new.html', name=name, dest=current, success=False, error=False, mode_edit=True)
+    return render_template('edit.html', name=name, dest=current, success=False, error=False, mode_edit=True)
 
   if not mode_edit and current:
     # Attempted a create that already existed.
-    return render_template('new.html', name=name, dest=dest, success=False, error="exists", mode_edit=mode_edit)
+    return render_template('edit.html', name=name, dest=dest, success=False, error="exists", mode_edit=mode_edit)
 
   with storage.transaction():
     table.put(name, dest)
 
-  return render_template('new.html', name=name, dest=dest, success=True, mode_edit=True)
+  return render_template('edit.html', name=name, dest=dest, success=True, mode_edit=True)
+
+@app.route('/delete', methods=['POST'])
+def delete():
+  name = request.values.get('name', None)
+
+  if not name:
+    return redirect('/list')
+ 
+  current = table.get(name)
+  if current is None:
+    current = ""
+
+  with storage.transaction():
+    table.remove(name)
+
+  return render_template('delete.html', name=name, dest=current)
 
 @app.route('/list')
 def list_links():

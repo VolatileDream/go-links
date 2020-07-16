@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Delete Link{% endblock %}
+{% block body %}
+  <p class=error><strong>go/to/{{ name }} deleted</strong></p>
+  <form action="/edit" method=post>
+    <p>Name: <strong>{{ name }}</strong></p>
+    <input type=hidden name=name value="{{ name }}"/>
+    <p>Location: <strong>{{ dest }}</strong></p>
+    <input type=hidden name=dest value="{{ dest }}" />
+    <p><input type=submit value="Undo Delete" /></p>
+  </form>
+{% endblock %}
+

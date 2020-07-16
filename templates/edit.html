@@ -10,6 +10,15 @@
   {% endif %}
     <p>Name:    <input type=text name=name value="{{ name }}"/></p>
     <p>Location: <input type=text name=dest value="{{ dest }}"</p>
+  {% if mode_edit %}
+    <input type=hidden name=edit value=True />
+    <p><input type=submit value="Update" /></p>
+  {% else %}
+    <p><input type=submit value="Create" /></p>
+  {% endif %}
+  </form>
+  <form action="/delete" method=post>
+  <input type=hidden name=name value="{{ name }}"/>
+  <input type=submit value="Delete" />
   </form>
 {% endblock %}
-
