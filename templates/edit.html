@@ -7,7 +7,7 @@
     <p class=error><strong>Error:</strong> {{ error }}</p>
   {% elif success %}
     <p class=error><strong>Success!</strong></p>
-    <p><a href="/to/{{ name }}">go/to/{{ name }}</a> now directs to {{ dest }}</p>
+    <p><a href="/to/{{ name }}">{{ quick_host }}/{{ name }}</a> now directs to {{ dest }}</p>
   {% endif %}
     <p>Name: <strong>{{ name }}</strong></p>
     <input type=hidden name=name value="{{ name }}"/>

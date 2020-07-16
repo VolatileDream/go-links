@@ -1,7 +1,7 @@
-<title>{% block title %}{% endblock %} | goto</title>
+<title>{% block title %}{% endblock %} | {{ quick_host }}</title>
 <link rel=stylesheet href=/static/style.css type=text/css>
 <div class=box>
-  <h1><a href=/>goto</a></h1>
+  <h1><a href=/>{{ quick_host }}</a></h1>
   <p class=tagline>shortlen links to get there faster</p>
   {% block body %}{% endblock %}
 </div>

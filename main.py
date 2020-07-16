@@ -31,6 +31,12 @@ def redirects():
 def counts():
   pass
 
+def render(template, **kwargs):
+  return render_template(template,
+                         base_host=app.config['HOST_BASE'],
+                         quick_host=app.config['HOST_QUICK'],
+                         **kwargs)
+
 # Really this should be a separate server that
 # responds to all `goto` domain requests instead
 # of having this built into the `go` server.
@@ -53,7 +59,7 @@ def index():
 
 @app.route('/new')
 def create_link():
-  return render_template('new.html')
+  return render('new.html')
 
 @app.route('/edit', methods=['GET', 'POST'])
 def create_or_edit_link():
@@ -71,16 +77,16 @@ def create_or_edit_link():
     current = ""
 
   if request.method == 'GET':
-    return render_template('edit.html', name=name, dest=current, mode="edit")
+    return render('edit.html', name=name, dest=current, mode="edit")
 
   if mode == "create" and current:
     # Attempted a create that already existed.
-    return render_template('edit.html', name=name, dest=current, error="exists", mode="edit")
+    return render('edit.html', name=name, dest=current, error="exists", mode="edit")
 
   with storage.transaction():
     redirects().put(name, dest)
 
-  return render_template('edit.html', name=name, dest=dest, success=True, mode="edit")
+  return render('edit.html', name=name, dest=dest, success=True, mode="edit")
 
 @app.route('/delete', methods=['POST'])
 def delete():
@@ -96,12 +102,12 @@ def delete():
   with storage.transaction():
     redirects().remove(name)
 
-  return render_template('delete.html', name=name, dest=current)
+  return render('delete.html', name=name, dest=current)
 
 @app.route('/list')
 def list_links():
   links = [{"id": i[0], "target": i[1]} for i in redirects().list()]
-  return render_template("listing.html", listing=links)
+  return render("listing.html", listing=links)
 
 @app.route('/to/<path:wildcard>')
 def redirector(wildcard):
