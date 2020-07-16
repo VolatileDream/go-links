@@ -3,7 +3,7 @@
 {% block body %}
 <h2>Links</h2>
 {% for item in listing %}
-  <p><a href="/to/{{ item.id }}">{{ item.id }}</a>(<a href=/edit?name={{ item.id }}>edit</a>): {{ item.target }}</p>
+  <p><a href=/edit?name={{ item.id }}>edit</a> {{ item.id }}: <a href=/to/{{ item.id }}>{{ item.target }}</a></p>
 {% endfor %}
   <a href=/new>
     <input type=button value="Create a Link"/>
