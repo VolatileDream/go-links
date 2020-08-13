@@ -1,0 +1,4 @@
+# go-links service entries.
+127.0.0.1 go
+127.0.0.1 goto
+
