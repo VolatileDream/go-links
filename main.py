@@ -109,11 +109,14 @@ def list_links():
   links = [{"id": i[0], "target": i[1]} for i in redirects().list()]
   return render("listing.html", listing=links)
 
+@app.route('/to/')
 @app.route('/to/<path:wildcard>')
-def redirector(wildcard):
+def redirector(wildcard=""):
   # for convenience, because the empty string can't be registered.
   if not wildcard:
-    return redirect("/")
+    base = app.config['HOST_BASE']
+    quick = app.config['HOST_QUICK']
+    return redirect(request.url_root.replace(quick, base, 1))
 
   redir = redirects().get(wildcard)
   if redir:
