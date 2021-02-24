@@ -111,6 +111,10 @@ def list_links():
 
 @app.route('/to/<path:wildcard>')
 def redirector(wildcard):
+  # for convenience, because the empty string can't be registered.
+  if not wildcard:
+    return redirect("/")
+
   redir = redirects().get(wildcard)
   if redir:
     with storage.transaction():
