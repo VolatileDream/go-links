@@ -51,7 +51,14 @@ def maybe_rewrite_for_goto_domain():
   if force_goto or host == quick or \
       (host.startswith(quick) and len(host) > len(quick) and host[len(quick)] in url_delims):
     # Redirect to go, assuming it resolves to where this request landed.
-    return redirect(request.url_root.replace(quick, base, 1) + "to" + request.full_path)
+    # Note: this assumes the service is reachable __without__ specifying a port.
+    url = "{scheme}://{hostname}/to{path}".format(
+        scheme=request.scheme,
+        hostname=base,
+        # Path starts with '/' hence the above weirdness.
+        path=request.full_path)
+    return redirect(url)
+
 
 @app.route('/')
 def index():
