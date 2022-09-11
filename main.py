@@ -43,21 +43,20 @@ def render(template, **kwargs):
 @app.before_request
 def maybe_rewrite_for_goto_domain():
   url_delims = [':', '.']
-  base = app.config['HOST_BASE']
   quick = app.config['HOST_QUICK']
 
   host = request.host
   force_goto = request.args.get('force_goto')
   if force_goto or host == quick or \
       (host.startswith(quick) and len(host) > len(quick) and host[len(quick)] in url_delims):
-    # Redirect to go, assuming it resolves to where this request landed.
-    # Note: this assumes the service is reachable __without__ specifying a port.
-    url = "{scheme}://{hostname}/to{path}".format(
-        scheme=request.scheme,
-        hostname=base,
-        # Path starts with '/' hence the above weirdness.
-        path=request.full_path)
-    return redirect(url)
+
+    # This is a hack, but it is better than attempting to redirect to the HOST_BASE
+    # domain, which may only be a partial domain name, eg: 'goto' used as part of
+    # goto.mydomain.com, and so redirecting to 'go' would not be correct in all
+    # circumstances. Alternatively, the short name may be registered under multiple
+    # full domain names, and specifying any of the longer names would not result
+    # in correct behaviour all of the time.
+    return redirector(request.path.lstrip("/"))
 
 
 @app.route('/')
@@ -121,9 +120,7 @@ def list_links():
 def redirector(wildcard=""):
   # for convenience, because the empty string can't be registered.
   if not wildcard:
-    base = app.config['HOST_BASE']
-    quick = app.config['HOST_QUICK']
-    return redirect(request.url_root.replace(quick, base, 1))
+    return list_links()
 
   redir = redirects().get(wildcard)
   if redir:
@@ -131,6 +128,7 @@ def redirector(wildcard=""):
       val = counts().get(wildcard) or 0
       counts().put(wildcard, val + 1)
     return redirect(redir)
+
   abort(404)
 
 def create_app():
