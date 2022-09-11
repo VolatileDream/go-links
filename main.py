@@ -120,7 +120,9 @@ def list_links():
 def redirector(wildcard=""):
   # for convenience, because the empty string can't be registered.
   if not wildcard:
-    return list_links()
+    base = app.config['HOST_BASE']
+    quick = app.config['HOST_QUICK']
+    return redirect(request.url_root.replace(quick, base, 1))
 
   redir = redirects().get(wildcard)
   if redir:
